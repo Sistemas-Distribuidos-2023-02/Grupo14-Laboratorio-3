@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package broker;
+
+option go_package = "github.com/Sistemas-Distribuidos-2023-02/Grupo14-Laboratorio-3/proto";
+
+service Broker {
+  rpc RedirectInformant (InformantRequest) returns (FulcrumAddress) {}
+  rpc Mediate (Message) returns (Acknowledgement) {}
+  rpc HandleConflict (ConflictInfo) returns (FulcrumAddress) {}
+}
+
+message InformantRequest {
+  string command = 1;
+}
+
+message FulcrumAddress {
+  string address = 1;
+}
+
+message Message {
+  string command = 1;
+}
+
+message Acknowledgement {
+    string acknowledgement = 1;
+}
+message ConflictInfo {
+  string sectorName = 1;
+  string baseName = 2;
+  int32 amountOfDarknessSoldiers = 3;
+}
