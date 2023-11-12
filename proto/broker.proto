@@ -19,13 +19,12 @@ message FulcrumAddress {
 }
 
 message Message {
-  string content = 1;
+  string command = 1;
 }
 
 message Acknowledgement {
-  string status = 1;
+    string acknowledgement = 1;
 }
-
 message ConflictInfo {
   string sectorName = 1;
   string baseName = 2;
