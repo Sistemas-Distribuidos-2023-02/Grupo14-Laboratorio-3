@@ -1,47 +1,21 @@
 syntax = "proto3";
 
+package fulcrum;
+
+option go_package = "github.com/Sistemas-Distribuidos-2023-02/Grupo14-Laboratorio-3/proto";
+
+message CommandRequest {
+  string action = 1;
+  string sector = 2;
+  string base = 3;
+  string newBase = 4;  // Only used for RenombrarBase
+  int32 value = 5;     // Only used for AgregarBase and ActualizarValor
+}
+
+message CommandResponse {
+  repeated int32 vectorClock = 1;
+}
+
 service Fulcrum {
-  rpc AgregarBase (RegistroSoldado) returns (Respuesta);
-  rpc RenombrarBase (RenombrarBaseRequest) returns (Respuesta);
-  rpc ActualizarValor (ActualizarValorRequest) returns (Respuesta);
-  rpc BorrarBase (BorrarBaseRequest) returns (Respuesta);
-  rpc VerificarConsistencia (ConsistenciaRequest) returns (Respuesta);
-}
-
-message RegistroSoldado {
-  string sector = 1;
-  string base = 2;
-  int32 cantidad = 3;
-  repeated int32 reloj_vector = 4;
-}
-
-message RenombrarBaseRequest {
-  string sector = 1;
-  string baseAntigua = 2;
-  string baseNueva = 3;
-  repeated int32 reloj_vector = 4;
-}
-
-message ActualizarValorRequest {
-  string sector = 1;
-  string base = 2;
-  int32 nuevoValor = 3;
-  repeated int32 reloj_vector = 4;
-}
-
-message BorrarBaseRequest {
-  string sector = 1;
-  string base = 2;
-  repeated int32 reloj_vector = 3;
-}
-
-message Respuesta {
-  bool exito = 1;
-  string mensaje = 2;
-  repeated int32 reloj_vector = 3;
-}
-
-message ConsistenciaRequest {
-  string sector = 1;
-  repeated int32 reloj_vector = 2;
+  rpc ApplyCommand(CommandRequest) returns (CommandResponse) {}
 }
