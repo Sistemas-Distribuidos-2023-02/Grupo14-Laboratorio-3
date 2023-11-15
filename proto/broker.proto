@@ -5,24 +5,24 @@ package broker;
 option go_package = "github.com/Sistemas-Distribuidos-2023-02/Grupo14-Laboratorio-3/proto";
 
 service Broker {
-  rpc RedirectInformant (InformantRequest) returns (FulcrumAddress) {}
-  rpc Mediate (Message) returns (Acknowledgement) {}
+  rpc RedirectInformant (InformantRequest) returns (FulcrumAddress) {} // Usado por el Informante
+  rpc Mediate (Message) returns (Acknowledgement) {} // Usado por la Vanguardia
   rpc HandleConflict (ConflictInfo) returns (FulcrumAddress) {}
 }
 
-message InformantRequest {
+message InformantRequest { // Usado por el Informante
   string command = 1;
 }
 
-message FulcrumAddress {
+message FulcrumAddress { // Usado por el Informante
   string address = 1;
 }
 
-message Message {
+message Message { // Usado por la Vanguardia
   string command = 1;
 }
 
-message Acknowledgement {
+message Acknowledgement { // Usado por la Vanguardia
     string acknowledgement = 1;
 }
 message ConflictInfo {
