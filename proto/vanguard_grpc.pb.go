@@ -19,14 +19,14 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Vanguard_ExecuteCommand_FullMethodName = "/vanguard.Vanguard/ExecuteCommand"
+	Vanguard_GetSoldados_FullMethodName = "/vanguard.Vanguard/GetSoldados"
 )
 
 // VanguardClient is the client API for Vanguard service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type VanguardClient interface {
-	ExecuteCommand(ctx context.Context, in *Command, opts ...grpc.CallOption) (*Response, error)
+	GetSoldados(ctx context.Context, in *Command, opts ...grpc.CallOption) (*Response, error)
 }
 
 type vanguardClient struct {
@@ -37,9 +37,9 @@ func NewVanguardClient(cc grpc.ClientConnInterface) VanguardClient {
 	return &vanguardClient{cc}
 }
 
-func (c *vanguardClient) ExecuteCommand(ctx context.Context, in *Command, opts ...grpc.CallOption) (*Response, error) {
+func (c *vanguardClient) GetSoldados(ctx context.Context, in *Command, opts ...grpc.CallOption) (*Response, error) {
 	out := new(Response)
-	err := c.cc.Invoke(ctx, Vanguard_ExecuteCommand_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, Vanguard_GetSoldados_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +50,7 @@ func (c *vanguardClient) ExecuteCommand(ctx context.Context, in *Command, opts .
 // All implementations must embed UnimplementedVanguardServer
 // for forward compatibility
 type VanguardServer interface {
-	ExecuteCommand(context.Context, *Command) (*Response, error)
+	GetSoldados(context.Context, *Command) (*Response, error)
 	mustEmbedUnimplementedVanguardServer()
 }
 
@@ -58,8 +58,8 @@ type VanguardServer interface {
 type UnimplementedVanguardServer struct {
 }
 
-func (UnimplementedVanguardServer) ExecuteCommand(context.Context, *Command) (*Response, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ExecuteCommand not implemented")
+func (UnimplementedVanguardServer) GetSoldados(context.Context, *Command) (*Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetSoldados not implemented")
 }
 func (UnimplementedVanguardServer) mustEmbedUnimplementedVanguardServer() {}
 
@@ -74,20 +74,20 @@ func RegisterVanguardServer(s grpc.ServiceRegistrar, srv VanguardServer) {
 	s.RegisterService(&Vanguard_ServiceDesc, srv)
 }
 
-func _Vanguard_ExecuteCommand_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Vanguard_GetSoldados_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(Command)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(VanguardServer).ExecuteCommand(ctx, in)
+		return srv.(VanguardServer).GetSoldados(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Vanguard_ExecuteCommand_FullMethodName,
+		FullMethod: Vanguard_GetSoldados_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(VanguardServer).ExecuteCommand(ctx, req.(*Command))
+		return srv.(VanguardServer).GetSoldados(ctx, req.(*Command))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -100,8 +100,8 @@ var Vanguard_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*VanguardServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "ExecuteCommand",
-			Handler:    _Vanguard_ExecuteCommand_Handler,
+			MethodName: "GetSoldados",
+			Handler:    _Vanguard_GetSoldados_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

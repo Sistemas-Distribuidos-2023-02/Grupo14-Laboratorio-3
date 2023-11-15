@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.3.0
 // - protoc             v3.12.4
-// source: proto/fulcrum.proto
+// source: fulcrum.proto
 
 package proto
 
@@ -19,7 +19,8 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Fulcrum_ApplyCommand_FullMethodName = "/fulcrum.Fulcrum/ApplyCommand"
+	Fulcrum_ApplyCommand_FullMethodName           = "/fulcrum.Fulcrum/ApplyCommand"
+	Fulcrum_ProcessVanguardMessage_FullMethodName = "/fulcrum.Fulcrum/ProcessVanguardMessage"
 )
 
 // FulcrumClient is the client API for Fulcrum service.
@@ -27,6 +28,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type FulcrumClient interface {
 	ApplyCommand(ctx context.Context, in *CommandRequest, opts ...grpc.CallOption) (*CommandResponse, error)
+	ProcessVanguardMessage(ctx context.Context, in *Message, opts ...grpc.CallOption) (*Acknowledgement, error)
 }
 
 type fulcrumClient struct {
@@ -46,11 +48,21 @@ func (c *fulcrumClient) ApplyCommand(ctx context.Context, in *CommandRequest, op
 	return out, nil
 }
 
+func (c *fulcrumClient) ProcessVanguardMessage(ctx context.Context, in *Message, opts ...grpc.CallOption) (*Acknowledgement, error) {
+	out := new(Acknowledgement)
+	err := c.cc.Invoke(ctx, Fulcrum_ProcessVanguardMessage_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // FulcrumServer is the server API for Fulcrum service.
 // All implementations must embed UnimplementedFulcrumServer
 // for forward compatibility
 type FulcrumServer interface {
 	ApplyCommand(context.Context, *CommandRequest) (*CommandResponse, error)
+	ProcessVanguardMessage(context.Context, *Message) (*Acknowledgement, error)
 	mustEmbedUnimplementedFulcrumServer()
 }
 
@@ -60,6 +72,9 @@ type UnimplementedFulcrumServer struct {
 
 func (UnimplementedFulcrumServer) ApplyCommand(context.Context, *CommandRequest) (*CommandResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ApplyCommand not implemented")
+}
+func (UnimplementedFulcrumServer) ProcessVanguardMessage(context.Context, *Message) (*Acknowledgement, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ProcessVanguardMessage not implemented")
 }
 func (UnimplementedFulcrumServer) mustEmbedUnimplementedFulcrumServer() {}
 
@@ -92,6 +107,24 @@ func _Fulcrum_ApplyCommand_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Fulcrum_ProcessVanguardMessage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Message)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FulcrumServer).ProcessVanguardMessage(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Fulcrum_ProcessVanguardMessage_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FulcrumServer).ProcessVanguardMessage(ctx, req.(*Message))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Fulcrum_ServiceDesc is the grpc.ServiceDesc for Fulcrum service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -103,7 +136,11 @@ var Fulcrum_ServiceDesc = grpc.ServiceDesc{
 			MethodName: "ApplyCommand",
 			Handler:    _Fulcrum_ApplyCommand_Handler,
 		},
+		{
+			MethodName: "ProcessVanguardMessage",
+			Handler:    _Fulcrum_ProcessVanguardMessage_Handler,
+		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "proto/fulcrum.proto",
+	Metadata: "fulcrum.proto",
 }

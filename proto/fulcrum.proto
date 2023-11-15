@@ -1,8 +1,15 @@
 syntax = "proto3";
 
+import "broker.proto";
+
 package fulcrum;
 
 option go_package = "github.com/Sistemas-Distribuidos-2023-02/Grupo14-Laboratorio-3/proto";
+
+service Fulcrum {
+  rpc ApplyCommand(CommandRequest) returns (CommandResponse) {}
+  rpc ProcessVanguardMessage(broker.Message) returns (broker.Acknowledgement) {}
+}
 
 message CommandRequest {
   string action = 1;
@@ -14,8 +21,4 @@ message CommandRequest {
 
 message CommandResponse {
   repeated int32 vectorClock = 1;
-}
-
-service Fulcrum {
-  rpc ApplyCommand(CommandRequest) returns (CommandResponse) {}
 }

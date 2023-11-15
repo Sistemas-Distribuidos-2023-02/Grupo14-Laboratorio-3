@@ -4,27 +4,48 @@ import (
     "context"
     "log"
     "net"
+    "fmt"
 
     pb "github.com/Sistemas-Distribuidos-2023-02/Grupo14-Laboratorio-3/proto"
 
     "google.golang.org/grpc"
 )
 
+type LogEntry struct {
+    SectorInfo   string
+    VectorClock  []int32
+    FulcrumServer string
+}
+
+var logEntries []LogEntry
+
 type server struct {
     pb.UnimplementedVanguardServer
     brokerClient pb.BrokerClient
 }
 
-func (s *server) ExecuteCommand(ctx context.Context, in *pb.Command) (*pb.Response, error) {
+func (s *server) GetSoldados(ctx context.Context, in *pb.Command) (*pb.Response, error) {
     // Forward the command to the Broker server
-    message := &pb.Message{Command: in.GetCommand()}
+    message := &pb.Message{Sector: in.GetSector(), Base: in.GetBase()}
     ack, err := s.brokerClient.Mediate(ctx, message)
     if err != nil {
         return nil, err
     }
 
+    // Log the command and response
+    logEntry := LogEntry{
+        SectorInfo:   fmt.Sprintf("GetSoldados %s %s", in.GetSector(), in.GetBase()),
+        VectorClock:  ack.GetVectorClock(),
+        FulcrumServer: ack.GetFulcrumServer(),
+    }
+    logEntries = append(logEntries, logEntry)
+
     // Return the response from the Broker server to the user
-    return &pb.Response{Acknowledgement: ack.GetAcknowledgement()}, nil
+    return &pb.Response{
+        Acknowledgement: ack.GetAcknowledgement(),
+        FulcrumServer: ack.GetFulcrumServer(),
+        VectorClock: ack.GetVectorClock(),
+    }, nil
 }
 
 func main() {
@@ -52,6 +73,32 @@ func main() {
 
     // Attach the Vanguard service to the gRPC server
     pb.RegisterVanguardServer(grpcServer, vanguardServer)
+
+    go func() { // Consola input
+        for {
+            fmt.Print("Enter sector: ")
+            var sector string
+            fmt.Scanln(&sector)
+    
+            fmt.Print("Enter base: ")
+            var base string
+            fmt.Scanln(&base)
+    
+            // Create a Command message
+            cmd := &pb.Command{Sector: sector, Base: base}
+    
+            // Call the GetSoldados method
+            res, err := vanguardServer.GetSoldados(context.Background(), cmd)
+            if err != nil {
+                log.Fatalf("Failed to execute command: %v", err)
+            }
+    
+            // Print the response
+            fmt.Println("Response:", res.GetAcknowledgement())
+            fmt.Println("Fulcrum Server:", res.GetFulcrumServer())
+            fmt.Println("Vector Clock:", res.GetVectorClock())
+        }
+    }()
 
     // Start the gRPC server (blocking)
     if err := grpcServer.Serve(lis); err != nil {

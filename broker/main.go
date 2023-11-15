@@ -49,7 +49,7 @@ func (s *server) Mediate(ctx context.Context, in *pb.Message) (*pb.Acknowledgeme
     client := pb.NewFulcrumClient(conn)
 
     // Forward the message to the Fulcrum server
-    ack, err := client.ProcessMessage(ctx, in)
+    ack, err := client.ProcessVanguardMessage(ctx, in)
     if err != nil {
         return nil, err
     }

@@ -19,11 +19,13 @@ message FulcrumAddress { // Usado por el Informante
 }
 
 message Message { // Usado por la Vanguardia
-  string command = 1;
+    string sector = 1;
+    string base = 2;
 }
-
 message Acknowledgement { // Usado por la Vanguardia
     string acknowledgement = 1;
+    string FulcrumServer = 2;
+    repeated int32 VectorClock = 3;
 }
 message ConflictInfo {
   string sectorName = 1;

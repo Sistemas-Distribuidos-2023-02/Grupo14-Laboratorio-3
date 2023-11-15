@@ -7,6 +7,9 @@ import (
 	"fmt"
 	"strconv"
 	"context"
+    "bufio"
+    "strings"
+    "errors"
 
     "google.golang.org/grpc"
     pb "github.com/Sistemas-Distribuidos-2023-02/Grupo14-Laboratorio-3/proto"
@@ -17,6 +20,37 @@ type FulcrumServer struct {
     id int
     state map[string]map[string]int
     vClocks map[string][]int
+}
+
+func (s *FulcrumServer) ProcessVanguardMessage(ctx context.Context, in *pb.Message) (*pb.Acknowledgement, error) {
+    // Open the .txt file
+    filename := fmt.Sprintf("Sector%s.txt", strings.Title(in.Sector))
+    file, err := os.Open(filename)
+    if err != nil {
+        return nil, err
+    }
+    defer file.Close()
+
+    // Create a scanner to read the file
+    scanner := bufio.NewScanner(file)
+
+    // Loop over each line in the file
+    for scanner.Scan() {
+        // Split the line into sector, base, and soldiers
+        parts := strings.Fields(scanner.Text())
+        if len(parts) != 3 {
+            continue
+        }
+
+        // Check if the sector and base match the input
+        if parts[0] == in.Sector && parts[1] == in.Base {
+            // Return the number of soldiers
+            return &pb.Acknowledgement{Acknowledgement: parts[2]}, nil
+        }
+    }
+
+    // If no matching sector and base were found, return an error
+    return nil, errors.New("sector and base not found")
 }
 
 func NewFulcrumServer(id int) *FulcrumServer {
