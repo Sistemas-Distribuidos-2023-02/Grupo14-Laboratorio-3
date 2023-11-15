@@ -10,19 +10,19 @@ service Broker {
   rpc HandleConflict (ConflictInfo) returns (FulcrumAddress) {}
 }
 
-message InformantRequest {
+message InformantRequest { // Usado por el Informante
   string command = 1;
 }
 
-message FulcrumAddress {
+message FulcrumAddress { // Usado por el Informante
   string address = 1;
 }
 
-message Message {
+message Message { // Usado por la Vanguardia
   string command = 1;
 }
 
-message Acknowledgement {
+message Acknowledgement { // Usado por la Vanguardia
     string acknowledgement = 1;
 }
 message ConflictInfo {
