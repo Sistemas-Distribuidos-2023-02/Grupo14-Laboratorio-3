@@ -76,11 +76,11 @@ func main() {
 
     go func() { // Consola input
         for {
-            fmt.Print("Enter sector: ")
+            fmt.Print("Enter sector (ingresar solo el nombre, primera letra mayuscula): ")
             var sector string
             fmt.Scanln(&sector)
     
-            fmt.Print("Enter base: ")
+            fmt.Print("Enter base (ingresar solo el nombre, primera letra mayuscula): ")
             var base string
             fmt.Scanln(&base)
     
