@@ -3,7 +3,7 @@ module github.com/Sistemas-Distribuidos-2023-02/Grupo14-Laboratorio-3
 go 1.18
 
 require (
-	google.golang.org/grpc v1.59.0
+	google.golang.org/grpc v1.38.0
 	google.golang.org/protobuf v1.31.0
 )
 
