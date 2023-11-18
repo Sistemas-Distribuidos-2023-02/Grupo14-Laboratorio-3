@@ -8,6 +8,7 @@ option go_package = "github.com/Sistemas-Distribuidos-2023-02/Grupo14-Laboratori
 message Command {
     string sector = 1;
     string base = 2;
+    string clientId = 3;
 }
 
 // The response from the server

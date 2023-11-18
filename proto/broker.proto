@@ -21,6 +21,8 @@ message FulcrumAddress { // Usado por el Informante
 message Message { // Usado por la Vanguardia
     string sector = 1;
     string base = 2;
+    repeated int32 VectorClock = 3;
+    string clientId = 4;
 }
 message Acknowledgement { // Usado por la Vanguardia
     string acknowledgement = 1;

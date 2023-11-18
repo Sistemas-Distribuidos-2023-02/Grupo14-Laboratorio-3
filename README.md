@@ -12,7 +12,7 @@ Vanguardia = Mismo rol que el server de la ONU en el lab 2
 
 ## Comandos
 
-* Para compilar protobuf (ejecutar en carpeta proto): `protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative <nombre_archivo.proto>`
+* Para compilar protobuf (ejecutar en directorio root del repo): `protoc -I proto/ --go_out=proto/ --go_opt=paths=source_relative --go-grpc_out=proto/ --go-grpc_opt=paths=source_relative proto/*.proto`
 
 ## Máquinas Virtuales
 

@@ -22,15 +22,29 @@ var logEntries []LogEntry
 type server struct {
     pb.UnimplementedVanguardServer
     brokerClient pb.BrokerClient
+    clientClocks map[string][]int32
 }
 
 func (s *server) GetSoldados(ctx context.Context, in *pb.Command) (*pb.Response, error) {
+    // Get the client's latest vector clock
+    clientClock, ok := s.clientClocks[in.ClientId]
+    if !ok {
+        clientClock = make([]int32, len(s.clientClocks))
+    }
+
     // Forward the command to the Broker server
-    message := &pb.Message{Sector: in.GetSector(), Base: in.GetBase()}
+    message := &pb.Message{
+        Sector: in.GetSector(),
+        Base: in.GetBase(),
+        VectorClock: clientClock,
+    }
     ack, err := s.brokerClient.Mediate(ctx, message)
     if err != nil {
         return nil, err
     }
+
+    // Update the client's vector clock
+    s.clientClocks[in.ClientId] = ack.GetVectorClock()
 
     // Log the command and response
     logEntry := LogEntry{

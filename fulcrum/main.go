@@ -23,6 +23,19 @@ type FulcrumServer struct {
 }
 
 func (s *FulcrumServer) ProcessVanguardMessage(ctx context.Context, in *pb.Message) (*pb.Acknowledgement, error) {
+    // Get the stored vector clock for the sector
+    storedClock, ok := s.vClocks[in.Sector]
+    if !ok {
+        storedClock = make([]int, len(s.vClocks))
+    }
+
+    // Compare the incoming vector clock with the stored vector clock
+    for i := range in.VectorClock {
+        if int(in.VectorClock[i]) < storedClock[i] {
+            return nil, errors.New("stale read")
+        }
+    }
+
     // Open the .txt file
     filename := fmt.Sprintf("Sector%s.txt", strings.Title(in.Sector))
     file, err := os.Open(filename)
