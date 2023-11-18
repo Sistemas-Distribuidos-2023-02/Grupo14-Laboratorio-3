@@ -420,6 +420,8 @@ func main() {
     grpcServer := grpc.NewServer()
     pb.RegisterFulcrumServer(grpcServer, s)
 
+    log.Printf("Fulcrum Server %v is running...", id)
+
     if err := grpcServer.Serve(lis); err != nil {
         log.Fatalf("Failed to serve: %v", err)
     }
