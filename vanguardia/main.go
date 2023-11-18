@@ -84,6 +84,7 @@ func main() {
 
     // Create a new Vanguard server
     vanguardServer := &server{brokerClient: brokerClient}
+    fmt.Println("Vanguard server running...")
 
     // Attach the Vanguard service to the gRPC server
     pb.RegisterVanguardServer(grpcServer, vanguardServer)

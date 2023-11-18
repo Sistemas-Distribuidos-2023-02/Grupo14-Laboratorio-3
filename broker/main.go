@@ -1,15 +1,16 @@
 package main
 
 import (
-    "context"
-    "log"
-    "net"
+	"context"
+	"fmt"
+	"log"
 	"math/rand"
+	"net"
 	"time"
 
-    pb "github.com/Sistemas-Distribuidos-2023-02/Grupo14-Laboratorio-3/proto"
+	pb "github.com/Sistemas-Distribuidos-2023-02/Grupo14-Laboratorio-3/proto"
 
-    "google.golang.org/grpc"
+	"google.golang.org/grpc"
 )
 
 type server struct {
@@ -75,6 +76,9 @@ func main() {
     }
     s := grpc.NewServer()
     pb.RegisterBrokerServer(s, &server{})
+
+    fmt.Printf("Broker listening at %v\n", lis.Addr().String())
+
     if err := s.Serve(lis); err != nil {
         log.Fatalf("failed to serve: %v", err)
     }
