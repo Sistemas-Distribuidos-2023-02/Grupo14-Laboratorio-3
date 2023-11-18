@@ -328,7 +328,13 @@ func (s *FulcrumServer) ApplyPropagation(ctx context.Context, p *pb.Propagation)
             continue
         } else {
             // The incoming state and server state are concurrent, so resolve the conflict
-            // TODO: Implement your conflict resolution strategy here
+            for k, v := range incomingState {
+                if v2, ok := currentState[k]; !ok || v > v2 {
+                    // If the key is not in the current state, or the incoming value is greater,
+                    // update the current state with the incoming value
+                    currentState[k] = v
+                }
+            }
         }
     }
 
