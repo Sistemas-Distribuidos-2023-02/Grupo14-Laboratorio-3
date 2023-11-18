@@ -10,6 +10,8 @@ import (
     "bufio"
     "strings"
     "errors"
+    "time"
+    "sync"
 
     "google.golang.org/grpc"
     pb "github.com/Sistemas-Distribuidos-2023-02/Grupo14-Laboratorio-3/proto"
@@ -20,6 +22,29 @@ type FulcrumServer struct {
     id int
     state map[string]map[string]int
     vClocks map[string][]int
+    otherServers []*grpc.ClientConn
+    mu sync.Mutex
+}
+
+func NewFulcrumServer(id int) *FulcrumServer {
+    s := &FulcrumServer{
+        id:     id,
+        state:  make(map[string]map[string]int),
+        vClocks: make(map[string][]int),
+    }
+
+    // Initialize the otherServers slice
+    for i := 0; i < 3; i++ {
+        if i != id {
+            conn, err := grpc.Dial(fmt.Sprintf("localhost:%d", 50055+i), grpc.WithInsecure())
+            if err != nil {
+                log.Fatalf("Failed to connect to server %d: %v", i, err)
+            }
+            s.otherServers = append(s.otherServers, conn)
+        }
+    }
+
+    return s
 }
 
 func (s *FulcrumServer) ProcessVanguardMessage(ctx context.Context, in *pb.Message) (*pb.Acknowledgement, error) {
@@ -64,14 +89,6 @@ func (s *FulcrumServer) ProcessVanguardMessage(ctx context.Context, in *pb.Messa
 
     // If no matching sector and base were found, return an error
     return nil, errors.New("sector and base not found")
-}
-
-func NewFulcrumServer(id int) *FulcrumServer {
-    return &FulcrumServer{
-        id: id,
-        state: make(map[string]map[string]int),
-        vClocks: make(map[string][]int),
-    }
 }
 
 func (s *FulcrumServer) AgregarBase(sector string, base string, quantity int) {
@@ -285,6 +302,83 @@ func (s *FulcrumServer) ApplyCommand(ctx context.Context, command *pb.CommandReq
 	}, nil
 }
 
+func (s *FulcrumServer) ApplyPropagation(ctx context.Context, p *pb.Propagation) (*pb.PropagationResponse, error) {
+    // Lock the server state for writing
+    s.mu.Lock()
+    defer s.mu.Unlock()
+
+    // Get the current state and vector clock for the sector
+    currentState, currentVC := s.state[p.Sector], s.vClocks[p.Sector]
+
+    // Convert the incoming state to map[string]int
+    incomingState := make(map[string]int)
+    for k, v := range p.State {
+        incomingState[k] = int(v)
+    }
+
+    // Compare the incoming vector clock with the current vector clock
+    for i, incomingTime := range p.VectorClock {
+        incomingTimeInt := int(incomingTime)
+        if incomingTimeInt > currentVC[i] {
+            // The incoming state is more recent, so update the server state and vector clock
+            currentState = incomingState
+            currentVC[i] = incomingTimeInt
+        } else if incomingTimeInt < currentVC[i] {
+            // The server state is more recent, so ignore the incoming state
+            continue
+        } else {
+            // The incoming state and server state are concurrent, so resolve the conflict
+            // TODO: Implement your conflict resolution strategy here
+        }
+    }
+
+    // Update the server state and vector clock
+    s.state[p.Sector] = currentState
+    s.vClocks[p.Sector] = currentVC
+
+    return &pb.PropagationResponse{Success: true, Message: "Propagation applied successfully"}, nil
+}
+
+func (s *FulcrumServer) PropagateChanges() {
+    // Iterate over all other servers
+    for _, otherServer := range s.otherServers {
+        // Create a Fulcrum client
+        fulcrumClient := pb.NewFulcrumClient(otherServer)
+
+        // Create a context with a timeout
+        ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+        defer cancel()
+
+        // Iterate over all sectors
+        for sector, state := range s.state {
+            // Convert the state map to map[string]int32
+            stateInt32 := make(map[string]int32)
+            for k, v := range state {
+                stateInt32[k] = int32(v)
+            }
+
+            // Convert the vector clock to []int32
+            vClockInt32 := make([]int32, len(s.vClocks[sector]))
+            for i, v := range s.vClocks[sector] {
+                vClockInt32[i] = int32(v)
+            }
+
+            // Prepare the message with the current state and vector clock for the sector
+            message := &pb.Propagation{
+                Sector:      sector,
+                State:       stateInt32,
+                VectorClock: vClockInt32,
+            }
+
+            // Send the message to the other server
+            _, err := fulcrumClient.ApplyPropagation(ctx, message)
+            if err != nil {
+                log.Println("Failed to propagate changes to server:", err)
+            }
+        }
+    }
+}
+
 func main() {
     if len(os.Args) != 2 {
         fmt.Println("Usage: go run main.go <server_id>")
@@ -300,8 +394,19 @@ func main() {
     // Initialize the server
     s := NewFulcrumServer(id)
 
+    // Start a goroutine to propagate changes every 1 minute
+    go func() {
+        ticker := time.NewTicker(1 * time.Minute)
+        defer ticker.Stop()
+
+        for range ticker.C {
+            // Propagate changes to all other servers
+            s.PropagateChanges()
+        }
+    }()
+
     // Start a gRPC server
-    lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", 50051+id))
+    lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", 50055+id))
     if err != nil {
         log.Fatalf("Failed to listen: %v", err)
     }
