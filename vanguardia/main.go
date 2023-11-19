@@ -84,7 +84,7 @@ func main() {
     brokerClient := pb.NewBrokerClient(conn)
 
     // Create a new Vanguard server
-    vanguardServer := &server{brokerClient: brokerClient}
+    vanguardServer := &server{brokerClient: brokerClient, clientClocks: make(map[string][]int32)}
     fmt.Println("Vanguard server running...")
 
     // Attach the Vanguard service to the gRPC server
@@ -108,11 +108,12 @@ func main() {
             if err != nil {
                 log.Fatalf("Failed to execute command: %v", err)
             }
+
+            clock := res.GetVectorClock()
     
             // Print the response
             fmt.Println("Response:", res.GetAcknowledgement())
-            fmt.Println("Fulcrum Server:", res.GetFulcrumServer())
-            fmt.Println("Vector Clock:", res.GetVectorClock())
+            fmt.Printf("Vector Clock: [%v,%v,%v]\n", clock[0], clock[1], clock[2])
         }
     }()
 

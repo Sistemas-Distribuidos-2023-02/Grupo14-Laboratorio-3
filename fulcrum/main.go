@@ -12,6 +12,8 @@ import (
     "errors"
     "time"
     "sync"
+    "encoding/gob"
+    "os/signal"
 
     "google.golang.org/grpc"
     pb "github.com/Sistemas-Distribuidos-2023-02/Grupo14-Laboratorio-3/proto"
@@ -83,8 +85,17 @@ func (s *FulcrumServer) ProcessVanguardMessage(ctx context.Context, in *pb.Messa
 
         // Check if the sector and base match the input
         if parts[0] == in.Sector && parts[1] == in.Base {
+            // Cast to []int32
+            storedClock32 := make([]int32, len(storedClock))
+            for i, v := range storedClock {
+                storedClock32[i] = int32(v)
+            }
+
             // Return the number of soldiers
-            return &pb.Acknowledgement{Acknowledgement: parts[2]}, nil
+            return &pb.Acknowledgement{
+                Acknowledgement: parts[2],
+                VectorClock:     storedClock32,
+            }, nil
         }
     }
 
@@ -451,6 +462,42 @@ func (s *FulcrumServer) PropagateChanges() {
     }
 }
 
+func (s *FulcrumServer) saveVectorClocks() error {
+    file, err := os.Create("vectorClocks.gob")
+    if err != nil {
+        return err
+    }
+    defer file.Close()
+
+    encoder := gob.NewEncoder(file)
+    err = encoder.Encode(s.vClocks)
+    if err != nil {
+        return err
+    }
+
+    return nil
+}
+
+func (s *FulcrumServer) loadVectorClocks() error {
+    file, err := os.Open("vectorClocks.gob")
+    if err != nil {
+        if os.IsNotExist(err) {
+            // If the file doesn't exist, that's okay; we'll just start with empty vector clocks
+            return nil
+        }
+        return err
+    }
+    defer file.Close()
+
+    decoder := gob.NewDecoder(file)
+    err = decoder.Decode(&s.vClocks)
+    if err != nil {
+        return err
+    }
+
+    return nil
+}
+
 func main() {
     if len(os.Args) != 2 {
         fmt.Println("Usage: go run main.go <server_id>")
@@ -465,6 +512,16 @@ func main() {
 
     // Initialize the server
     s := NewFulcrumServer(id)
+
+    // Load the vector clocks
+    if err := s.loadVectorClocks(); err != nil {
+        log.Fatalf("Failed to load vector clocks: %v", err)
+    }
+
+    // Create a channel to receive OS signals
+    sigs := make(chan os.Signal, 1)
+    // Register the channel to receive interrupt signals
+    signal.Notify(sigs, os.Interrupt)
 
     // Start a goroutine to propagate changes every 1 minute
     go func() {
@@ -485,6 +542,17 @@ func main() {
 
     grpcServer := grpc.NewServer()
     pb.RegisterFulcrumServer(grpcServer, s)
+
+    // Start a goroutine that will stop the server when an interrupt signal is received
+    go func() {
+        <-sigs
+        log.Println("Stopping server...")
+        grpcServer.Stop()
+        if err := s.saveVectorClocks(); err != nil {
+            log.Fatalf("Failed to save vector clocks: %v", err)
+        }
+        os.Exit(0)
+    }()
 
     log.Printf("Fulcrum Server %v is running...", id)
 
