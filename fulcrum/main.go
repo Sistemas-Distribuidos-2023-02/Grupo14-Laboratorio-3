@@ -389,18 +389,12 @@ func (s *FulcrumServer) ApplyPropagation(ctx context.Context, p *pb.Propagation)
         return nil, fmt.Errorf("failed to write to log file: %w", err)
     }
 
-    // Open the sector file
-    sectorFile, err := os.OpenFile(fmt.Sprintf("Sector%s.txt", p.Sector), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+    // Delete the log file
+    err = os.Remove("log.txt")
     if err != nil {
-        return nil, fmt.Errorf("failed to open sector file: %w", err)
+        return nil, fmt.Errorf("failed to delete log file: %w", err)
     }
-    defer sectorFile.Close()
 
-    // Write to the sector file
-    _, err = fmt.Fprintf(sectorFile, "State: %v, Vector clock: %v\n", currentState, currentVC)
-    if err != nil {
-        return nil, fmt.Errorf("failed to write to sector file: %w", err)
-    }
 
     return &pb.PropagationResponse{Success: true, Message: "Propagation applied successfully"}, nil
 }
