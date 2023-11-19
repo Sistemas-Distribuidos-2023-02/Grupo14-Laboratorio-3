@@ -8,8 +8,6 @@ RUN go mod download
 
 WORKDIR /app/informante/Caiatl
 
-RUN ls -la
-RUN tail -f /dev/null
 RUN go build -o main .
 
 EXPOSE 50050
