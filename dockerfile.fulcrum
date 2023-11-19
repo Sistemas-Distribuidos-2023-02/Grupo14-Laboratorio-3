@@ -18,4 +18,4 @@ EXPOSE 50056
 EXPOSE 50057
 EXPOSE 50058
 
-CMD ./main $N
+CMD ["sh", "-c", "./main $N"]
