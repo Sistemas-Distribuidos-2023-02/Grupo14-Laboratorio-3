@@ -188,15 +188,20 @@ func processMsg(command string) {
 }
 
 func scanMsg() (mensaje string) {
-	scanner := bufio.NewScanner(os.Stdin)
-	var PromptC = ""
-	fmt.Println("Escriba el comando a ejecutar (0 para cerrar programa)")
-	fmt.Println("Recuerde ser consistente con mayúsculas y minúsculas para los comandos")
-	if scanner.Scan() {
-		PromptC = scanner.Text()
-	}
-	mensaje = PromptC
-	return
+    scanner := bufio.NewScanner(os.Stdin)
+    fmt.Println("Escriba el comando a ejecutar (0 para cerrar programa)")
+    fmt.Println("Recuerde ser consistente con mayúsculas y minúsculas para los comandos")
+    for scanner.Scan() {
+        mensaje = scanner.Text()
+        if mensaje != "" {
+            break
+        }
+        fmt.Println("Input cannot be empty. Please enter a command:")
+    }
+    if scanner.Err() != nil {
+        fmt.Println("Error reading input:", scanner.Err())
+    }
+    return
 }
 
 func main() {
