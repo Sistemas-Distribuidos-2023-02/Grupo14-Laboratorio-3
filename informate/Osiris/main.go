@@ -132,7 +132,7 @@ func processMsg(command string) {
 	fmt.Println("[*] Ejecutando consulta al servidor fulcrum...")
 	respuestaFulcrum := sendToFulcrum(respuesta, comando)
 	fmt.Println("[*] Respuesta recibida!, datos:")
-	fmt.Println(respuesta)
+	fmt.Println(respuestaFulcrum)
 
 	//Se analiza si no hay error
 	data := strings.Split(respuestaFulcrum, ",")
