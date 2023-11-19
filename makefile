@@ -2,24 +2,31 @@
 
 docker-broker: ## Initiates the Docker code for the broker server
 	@docker build -f dockerfile.broker -t broker .
+	@docker run -d --name broker broker
 
 docker-vanguardia: ## Initiates the Docker code for the vanguard server
 	@docker build -f dockerfile.vanguardia -t vanguardia .
+	@docker run -d --name vanguardia vanguardia
 
 docker-f1: ## Initiates the Docker code for fulcrum 1
 	@docker build -f dockerfile.fulcrum --build-arg NUM=1 -t fulcrum1 .
+	@docker run -d --name fulcrum1 fulcrum1
 
 docker-f2: ## Initiates the Docker code for fulcrum 2
 	@docker build -f dockerfile.fulcrum --build-arg NUM=2 -t fulcrum2 .
+	@docker run -d --name fulcrum2 fulcrum2
 
 docker-f3: ## Initiates the Docker code for fulcrum 3
 	@docker build -f dockerfile.fulcrum --build-arg NUM=3 -t fulcrum3 .
+	@docker run -d --name fulcrum3 fulcrum3
 
 docker-i1: ## Initiates the Docker code for Caiatl
 	@docker build -f dockerfile.caiatl -t caiatl .
+	@docker run -d --name caiatl caiatl
 
 docker-i2: ## Initiates the Docker code for Osiris
 	@docker build -f dockerfile.osiris -t osiris .
+	@docker run -d --name osiris osiris
 
 help: ## Display this help message
 	@echo "Usage:"
