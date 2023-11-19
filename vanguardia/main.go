@@ -108,12 +108,10 @@ func main() {
             if err != nil {
                 log.Fatalf("Failed to execute command: %v", err)
             }
-
-            clock := res.GetVectorClock()
     
             // Print the response
             fmt.Println("Response:", res.GetAcknowledgement())
-            fmt.Printf("Vector Clock: [%v,%v,%v]\n", clock[0], clock[1], clock[2])
+            fmt.Println("Vector Clock:", res.GetVectorClock())
         }
     }()
 

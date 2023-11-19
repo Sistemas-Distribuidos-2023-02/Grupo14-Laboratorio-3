@@ -14,6 +14,8 @@ import (
     "sync"
     "encoding/gob"
     "os/signal"
+    "io"
+    "io/ioutil"
 
     "google.golang.org/grpc"
     pb "github.com/Sistemas-Distribuidos-2023-02/Grupo14-Laboratorio-3/proto"
@@ -143,7 +145,7 @@ func (s *FulcrumServer) AgregarBase(sector string, base string, quantity int) {
     }
 
     // Update the sector file
-    s.updateSectorFile(sector)
+    s.updateSectorFile(sector, "Agregar", strconv.Itoa(quantity))
 }
 
 func (s *FulcrumServer) RenombrarBase(sector string, base string, newBase string) {
@@ -162,7 +164,7 @@ func (s *FulcrumServer) RenombrarBase(sector string, base string, newBase string
     delete(s.state[sector], base)
 
     // Update the vector clock
-    s.vClocks[sector][s.id]++
+    s.vClocks[sector][s.id-1]++
 
     // Write to the log file
     f, err := os.OpenFile("log.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
@@ -183,7 +185,7 @@ func (s *FulcrumServer) RenombrarBase(sector string, base string, newBase string
     }
 
     // Update the sector file
-    s.updateSectorFile(sector)
+    s.updateSectorFile(sector, "Renombrar", newBase)
 }
 
 func (s *FulcrumServer) ActualizarValor(sector string, base string, newValue int) {
@@ -201,7 +203,7 @@ func (s *FulcrumServer) ActualizarValor(sector string, base string, newValue int
     s.state[sector][base] = newValue
 
     // Update the vector clock
-    s.vClocks[sector][s.id]++
+    s.vClocks[sector][s.id-1]++
 
     // Write to the log file
     f, err := os.OpenFile("log.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
@@ -222,7 +224,7 @@ func (s *FulcrumServer) ActualizarValor(sector string, base string, newValue int
     }
 
     // Update the sector file
-    s.updateSectorFile(sector)
+    s.updateSectorFile(sector, "Actualizar", strconv.Itoa(newValue))
 }
 
 func (s *FulcrumServer) BorrarBase(sector string, base string) {
@@ -240,7 +242,7 @@ func (s *FulcrumServer) BorrarBase(sector string, base string) {
     delete(s.state[sector], base)
 
     // Update the vector clock
-    s.vClocks[sector][s.id]++
+    s.vClocks[sector][s.id-1]++
 
     // Write to the log file
     f, err := os.OpenFile("log.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
@@ -261,10 +263,10 @@ func (s *FulcrumServer) BorrarBase(sector string, base string) {
     }
 
     // Update the sector file
-    s.updateSectorFile(sector)
+    s.updateSectorFile(sector, "Borrar", base)
 }
 
-func (s *FulcrumServer) updateSectorFile(sector string) {
+func (s *FulcrumServer) updateSectorFile(sector string, command string, value string) {
     // Open the sector file
     f, err := os.OpenFile(fmt.Sprintf("Sector%s.txt", sector), os.O_CREATE|os.O_WRONLY, 0644)
     if err != nil {
@@ -273,9 +275,99 @@ func (s *FulcrumServer) updateSectorFile(sector string) {
     }
     defer f.Close()
 
-    // Write to the sector file
-    for base, quantity := range s.state[sector] {
-        _, err = f.WriteString(fmt.Sprintf("%s %s %d\n", sector, base, quantity))
+    // Handle the command
+    switch command {
+    case "Agregar":
+        // Write to the sector file
+        for base, quantity := range s.state[sector] {
+            _, err = f.WriteString(fmt.Sprintf("%s %s %d\n", sector, base, quantity))
+            if err != nil {
+                log.Println(err)
+                return
+            }
+        }
+    case "Renombrar":
+        for base := range s.state[sector] {
+            // Read the file line by line
+            lines, err := ioutil.ReadFile(fmt.Sprintf("Sector%s.txt", sector))
+            if err != nil {
+                log.Println(err)
+                return
+            }
+
+            // Split the file into lines
+            linesSlice := strings.Split(string(lines), "\n")
+
+            // For each line, check if it contains the base that you want to rename
+            for i, line := range linesSlice {
+                if strings.Contains(line, base) {
+                    // If it does, replace the base name with the new name
+                    linesSlice[i] = strings.Replace(line, base, value, 1)
+                }
+            }
+
+            // Write the lines back to the file
+            err = ioutil.WriteFile(fmt.Sprintf("Sector%s.txt", sector), []byte(strings.Join(linesSlice, "\n")), 0644)
+            if err != nil {
+                log.Println(err)
+                return
+            }
+        }
+    case "Actualizar":
+        for base := range s.state[sector] {
+            // Read the file line by line
+            lines, err := ioutil.ReadFile(fmt.Sprintf("Sector%s.txt", sector))
+            if err != nil {
+                log.Println(err)
+                return
+            }
+    
+            // Split the file into lines
+            linesSlice := strings.Split(string(lines), "\n")
+    
+            // For each line, check if it contains the base that you want to update
+            for i, line := range linesSlice {
+                if strings.Contains(line, base) {
+                    // If it does, split the line into words
+                    words := strings.Fields(line)
+                    // Replace the old value with the new one
+                    words[2] = value
+                    // Join the words back into a line
+                    linesSlice[i] = strings.Join(words, " ")
+                }
+            }
+    
+            // Write the lines back to the file
+            err = ioutil.WriteFile(fmt.Sprintf("Sector%s.txt", sector), []byte(strings.Join(linesSlice, "\n")), 0644)
+            if err != nil {
+                log.Println(err)
+                return
+            }
+        }
+    case "Borrar":
+        // Read the file line by line
+        lines, err := ioutil.ReadFile(fmt.Sprintf("Sector%s.txt", sector))
+        if err != nil {
+            log.Println(err)
+            return
+        }
+    
+        // Split the file into lines
+        linesSlice := strings.Split(string(lines), "\n")
+    
+        // Create a new slice to hold the lines that don't contain the base
+        newLines := make([]string, 0)
+    
+        // For each line, check if it contains the base that you want to delete
+        for _, line := range linesSlice {
+            if !strings.Contains(line, value) {
+                // If it doesn't, add it to the newLines slice
+                newLines = append(newLines, line)
+            }
+        }
+    
+        // Write the newLines back to the file
+        err = ioutil.WriteFile(fmt.Sprintf("Sector%s.txt", sector), []byte(strings.Join(newLines, "\n")), 0644)
         if err != nil {
             log.Println(err)
             return
@@ -492,6 +584,10 @@ func (s *FulcrumServer) loadVectorClocks() error {
     decoder := gob.NewDecoder(file)
     err = decoder.Decode(&s.vClocks)
     if err != nil {
+        if err == io.EOF {
+            // If the file is empty, that's okay; we'll just start with empty vector clocks
+            return nil
+        }
         return err
     }
 
