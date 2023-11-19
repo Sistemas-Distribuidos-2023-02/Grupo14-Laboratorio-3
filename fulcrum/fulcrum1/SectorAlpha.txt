@@ -1,7 +1,0 @@
-State: map[Alpha1:100], Vector clock: [0 0 1]
-State: map[Alpha1:100], Vector clock: [0 0 1]
-State: map[Alpha1:100], Vector clock: [0 0 1]
-State: map[Alpha1:100], Vector clock: [0 0 1]
-State: map[Alpha1:100], Vector clock: [0 0 1]
-State: map[Alpha1:100], Vector clock: [0 0 1]
-State: map[Alpha1:100], Vector clock: [0 0 1]

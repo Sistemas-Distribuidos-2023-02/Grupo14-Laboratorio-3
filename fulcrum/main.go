@@ -376,6 +376,15 @@ func (s *FulcrumServer) ApplyPropagation(ctx context.Context, p *pb.Propagation)
     s.state[p.Sector] = currentState
     s.vClocks[p.Sector] = currentVC
 
+    // Check if the log file exists
+    if _, err := os.Stat("log.txt"); err == nil {
+        // If it exists, delete the log file
+        err := os.Remove("log.txt")
+        if err != nil {
+            return nil, fmt.Errorf("failed to delete log file: %w", err)
+        }
+    }
+
     // Open the log file
     logFile, err := os.OpenFile("log.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
     if err != nil {
@@ -383,18 +392,20 @@ func (s *FulcrumServer) ApplyPropagation(ctx context.Context, p *pb.Propagation)
     }
     defer logFile.Close()
 
-    // Write to the log file
-    _, err = fmt.Fprintf(logFile, "Applied propagation for sector %s\n", p.Sector)
+    // Open the sector file
+    sectorFile, err := os.OpenFile(fmt.Sprintf("Sector%s.txt", p.Sector), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
     if err != nil {
-        return nil, fmt.Errorf("failed to write to log file: %w", err)
+        return nil, fmt.Errorf("failed to open sector file: %w", err)
     }
+    defer sectorFile.Close()
 
-    // Delete the log file
-    err = os.Remove("log.txt")
-    if err != nil {
-        return nil, fmt.Errorf("failed to delete log file: %w", err)
+    // Write to the sector file
+    for base, value := range s.state[p.Sector] {
+        _, err = fmt.Fprintf(sectorFile, "%s %s %d\n", p.Sector, base, value)
+        if err != nil {
+            return nil, fmt.Errorf("failed to write to sector file: %w", err)
+        }
     }
-
 
     return &pb.PropagationResponse{Success: true, Message: "Propagation applied successfully"}, nil
 }
