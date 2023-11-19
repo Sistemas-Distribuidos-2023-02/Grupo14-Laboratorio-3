@@ -23,9 +23,9 @@ func init() {
 }
 
 var fulcrumServers = []string{
-    "localhost:50056",
-    "localhost:50057",
-    "localhost:50058",
+    "dist054:50056",
+    "dist055:50057",
+    "dist056:50058",
 }
 
 func (s *server) RedirectInformant(ctx context.Context, in *pb.InformantRequest) (*pb.FulcrumAddress, error) {
