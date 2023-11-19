@@ -23,7 +23,7 @@ type base struct {
 
 // Lista de structs que almacenará de manera eficiente los bases.
 var bases []base
-var direccionBroker = "dist33:50051"
+var direccionBroker = "localhost:50051"
 var direccionFulcrum = ""
 
 // Constructor para el planeta, cosa de poder almacenar en memoria la info de los planetas manejados por la consola del informante.
@@ -114,7 +114,7 @@ func processMsg(command string) {
 			bases = append(bases, Cbase(comando[1], dataX, dataY, dataZ, direccionFulcrum))
 		}
 	} else {
-		//Error, no se hace nada
+		fmt.Println("Process message: Error en la respuesta del servidor Fulcrum")
 	}
 }
 

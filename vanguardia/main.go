@@ -64,8 +64,8 @@ func (s *server) GetSoldados(ctx context.Context, in *pb.Command) (*pb.Response,
 }
 
 func main() {
-    // Create a listener on TCP port 50051 (or any port you want)
-    lis, err := net.Listen("tcp", ":50051")
+    // Create a listener on TCP port
+    lis, err := net.Listen("tcp", ":50050")
     if err != nil {
         log.Fatalf("Failed to listen: %v", err)
     }
@@ -74,7 +74,7 @@ func main() {
     grpcServer := grpc.NewServer()
 
     // Connect to the Broker server
-    conn, err := grpc.Dial("broker_address", grpc.WithInsecure())
+    conn, err := grpc.Dial("localhost:50051", grpc.WithInsecure())
     if err != nil {
         log.Fatalf("Failed to connect to Broker server: %v", err)
     }
