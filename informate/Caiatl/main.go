@@ -50,7 +50,7 @@ func Solicitud(serviceClient pb.BrokerClient, msg string) string {
 	return res.Address
 }
 
-// Funcion que toma la ip a la que se desea enviar, se conecta y realiza el envio del mensaje. Retorna la respuesta
+// Funcion que toma la IP del Broker, se conecta y realiza el envio del mensaje. Retorna la IP del Fulcrum
 func enviarMsg(ip string, msg string) (answer string) {
 	conn, err := grpc.Dial(ip, grpc.WithInsecure())
 
@@ -67,9 +67,59 @@ func enviarMsg(ip string, msg string) (answer string) {
 	return
 }
 
+func sendToFulcrum(ip string, commandParts []string) string {
+	// Connect to Fulcrum
+	conn, err := grpc.Dial(ip, grpc.WithInsecure())
+	if err != nil {
+		panic("No se puede conectar al Fulcrum " + err.Error())
+	}
+	serviceClient := pb.NewFulcrumClient(conn)
+
+    // Initialize a CommandRequest with default values
+    req := &pb.CommandRequest{
+        Action:  commandParts[0],
+        Sector:  commandParts[1],
+        Base:    commandParts[2],
+        NewBase: "",
+        Value:   0,
+    }
+
+    // Handle different actions
+    switch commandParts[0] {
+    case "RenombrarBase":
+        if len(commandParts) > 3 {
+            req.NewBase = commandParts[3]
+        }
+    case "AgregarBase", "ActualizarValor":
+        if len(commandParts) > 3 {
+            value, err := strconv.Atoi(commandParts[3])
+            if err != nil {
+                panic("Invalid value: " + err.Error())
+            }
+            req.Value = int32(value)
+        }
+    case "BorrarBase":
+        // Do nothing, NewBase and Value should remain empty
+    default:
+        panic("Invalid action: " + commandParts[0])
+    }
+
+    res, err := serviceClient.ApplyCommand(context.Background(), req)
+    if err != nil {
+        panic("Message could not be created or sent: " + err.Error())
+    }
+
+	strClock := make([]string, len(res.VectorClock))
+    for i, num := range res.VectorClock {
+        strClock[i] = strconv.Itoa(int(num))
+    }
+
+    return strings.Join(strClock, ",")
+}
+
 // Procesa los comandos del usuario (Consulta a broker, luego a Fulcrum).
 func processMsg(command string) {
-	//Comando = ["AddCity planeta0 ciudad0 10"]
+	//Comando = ["AgregarBase sector base 100"]
 	var comando = strings.Split(command, " ")
 
 	//Se recibe la ip para el fulcrum
@@ -80,12 +130,12 @@ func processMsg(command string) {
 
 	//Se consulta al Fulcrum
 	fmt.Println("[*] Ejecutando consulta al servidor fulcrum...")
-	respuesta = enviarMsg(respuesta, command)
+	respuestaFulcrum := sendToFulcrum(respuesta, comando)
 	fmt.Println("[*] Respuesta recibida!, datos:")
 	fmt.Println(respuesta)
 
 	//Se analiza si no hay error
-	data := strings.Split(respuesta, " ")
+	data := strings.Split(respuestaFulcrum, ",")
 	if len(data) == 3 {
 		//Se recibieron los valores del reloj, se verifica consistencia y se actualiza data en struct del planeta.
 		dataX, _ := strconv.Atoi(data[0])
@@ -131,7 +181,6 @@ func scanMsg() (mensaje string) {
 }
 
 func main() {
-
 	mensaje := "-1"
 	for mensaje != "0" {
 		mensaje := scanMsg()
@@ -140,5 +189,4 @@ func main() {
 		}
 		processMsg(mensaje)
 	}
-
 }
