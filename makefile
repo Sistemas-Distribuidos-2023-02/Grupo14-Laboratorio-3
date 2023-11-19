@@ -6,7 +6,7 @@ docker-broker: ## Initiates the Docker code for the broker server
 
 docker-vanguardia: ## Initiates the Docker code for the vanguard server
 	@docker build -f dockerfile.vanguardia -t vanguardia .
-	@docker run -p 50050:50050 -d --name vanguardia vanguardia
+	@docker run -p 50050:50050 --name vanguardia vanguardia
 
 docker-f1: ## Initiates the Docker code for fulcrum 1
 	@docker build -f dockerfile.fulcrum --build-arg NUM=1 -t fulcrum1 .
@@ -22,11 +22,11 @@ docker-f3: ## Initiates the Docker code for fulcrum 3
 
 docker-i1: ## Initiates the Docker code for Caiatl
 	@docker build -f dockerfile.caiatl -t caiatl .
-	@docker run -p 50050:50050 -d --name caiatl caiatl
+	@docker run -p 50050:50050 --name caiatl caiatl
 
 docker-i2: ## Initiates the Docker code for Osiris
 	@docker build -f dockerfile.osiris -t osiris .
-	@docker run -p 50050:50050 -d --name osiris osiris
+	@docker run -p 50050:50050 --name osiris osiris
 
 help: ## Display this help message
 	@echo "Usage:"
