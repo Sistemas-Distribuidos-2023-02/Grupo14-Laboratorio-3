@@ -122,6 +122,25 @@ func processMsg(command string) {
 	//Comando = ["AgregarBase sector base 100"]
 	var comando = strings.Split(command, " ")
 
+	// Validate the command
+    if len(comando) < 3 {
+        fmt.Println("Invalid command. Expected at least 3 parts.")
+        return
+    }
+
+	// Validate the action
+    var validActions = map[string]bool{
+        "AgregarBase":     true,
+        "ActualizarValor": true,
+        "BorrarBase":      true,
+        "RenombrarBase":   true,
+    }
+    if !validActions[comando[0]] {
+        fmt.Println("Invalid action. Expected one of: AgregarBase, ActualizarValor, BorrarBase, RenombrarBase.")
+        return
+    }
+
+
 	//Se recibe la ip para el fulcrum
 	respuesta := enviarMsg(direccionBroker, command)
 	fmt.Println("[*] Ip recibida desde el Broker:")
