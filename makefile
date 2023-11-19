@@ -18,7 +18,7 @@ docker-f2: ## Initiates the Docker code for fulcrum 2
 
 docker-f3: ## Initiates the Docker code for fulcrum 3
 	@docker build -f dockerfile.fulcrum --build-arg NUM=3 -t fulcrum3 .
-	@docker run-p 50058:50058 -d --name fulcrum3 fulcrum3
+	@docker run -p 50058:50058 -d --name fulcrum3 fulcrum3
 
 docker-i1: ## Initiates the Docker code for Caiatl
 	@docker build -f dockerfile.caiatl -t caiatl .
