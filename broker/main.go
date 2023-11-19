@@ -31,6 +31,7 @@ var fulcrumServers = []string{
 func (s *server) RedirectInformant(ctx context.Context, in *pb.InformantRequest) (*pb.FulcrumAddress, error) {
     // Choose a random Fulcrum server
     address := fulcrumServers[rand.Intn(len(fulcrumServers))]
+    fmt.Printf("Redirecting Informant to %v\n", address)
 
     return &pb.FulcrumAddress{Address: address}, nil
 }
@@ -56,17 +57,13 @@ func (s *server) Mediate(ctx context.Context, in *pb.Message) (*pb.Acknowledgeme
         VectorClock: in.GetVectorClock(), // Add this line
     }
     ack, err := client.ProcessVanguardMessage(ctx, message)
+    fmt.Printf("Mediating message %v, %v\n", in.GetSector(), in.GetBase())
     if err != nil {
         return nil, err
     }
 
     // Return the acknowledgement from the Fulcrum server
     return ack, nil
-}
-
-func (s *server) HandleConflict(ctx context.Context, in *pb.ConflictInfo) (*pb.FulcrumAddress, error) {
-    // Fulcrum 1 is always the dominant server
-    return &pb.FulcrumAddress{Address: "fulcrum1_address"}, nil
 }
 
 func main() {

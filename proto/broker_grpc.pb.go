@@ -21,7 +21,6 @@ const _ = grpc.SupportPackageIsVersion7
 const (
 	Broker_RedirectInformant_FullMethodName = "/broker.Broker/RedirectInformant"
 	Broker_Mediate_FullMethodName           = "/broker.Broker/Mediate"
-	Broker_HandleConflict_FullMethodName    = "/broker.Broker/HandleConflict"
 )
 
 // BrokerClient is the client API for Broker service.
@@ -30,7 +29,6 @@ const (
 type BrokerClient interface {
 	RedirectInformant(ctx context.Context, in *InformantRequest, opts ...grpc.CallOption) (*FulcrumAddress, error)
 	Mediate(ctx context.Context, in *Message, opts ...grpc.CallOption) (*Acknowledgement, error)
-	HandleConflict(ctx context.Context, in *ConflictInfo, opts ...grpc.CallOption) (*FulcrumAddress, error)
 }
 
 type brokerClient struct {
@@ -59,22 +57,12 @@ func (c *brokerClient) Mediate(ctx context.Context, in *Message, opts ...grpc.Ca
 	return out, nil
 }
 
-func (c *brokerClient) HandleConflict(ctx context.Context, in *ConflictInfo, opts ...grpc.CallOption) (*FulcrumAddress, error) {
-	out := new(FulcrumAddress)
-	err := c.cc.Invoke(ctx, Broker_HandleConflict_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // BrokerServer is the server API for Broker service.
 // All implementations must embed UnimplementedBrokerServer
 // for forward compatibility
 type BrokerServer interface {
 	RedirectInformant(context.Context, *InformantRequest) (*FulcrumAddress, error)
 	Mediate(context.Context, *Message) (*Acknowledgement, error)
-	HandleConflict(context.Context, *ConflictInfo) (*FulcrumAddress, error)
 	mustEmbedUnimplementedBrokerServer()
 }
 
@@ -87,9 +75,6 @@ func (UnimplementedBrokerServer) RedirectInformant(context.Context, *InformantRe
 }
 func (UnimplementedBrokerServer) Mediate(context.Context, *Message) (*Acknowledgement, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Mediate not implemented")
-}
-func (UnimplementedBrokerServer) HandleConflict(context.Context, *ConflictInfo) (*FulcrumAddress, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method HandleConflict not implemented")
 }
 func (UnimplementedBrokerServer) mustEmbedUnimplementedBrokerServer() {}
 
@@ -140,24 +125,6 @@ func _Broker_Mediate_Handler(srv interface{}, ctx context.Context, dec func(inte
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Broker_HandleConflict_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ConflictInfo)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(BrokerServer).HandleConflict(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Broker_HandleConflict_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BrokerServer).HandleConflict(ctx, req.(*ConflictInfo))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 // Broker_ServiceDesc is the grpc.ServiceDesc for Broker service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -172,10 +139,6 @@ var Broker_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Mediate",
 			Handler:    _Broker_Mediate_Handler,
-		},
-		{
-			MethodName: "HandleConflict",
-			Handler:    _Broker_HandleConflict_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

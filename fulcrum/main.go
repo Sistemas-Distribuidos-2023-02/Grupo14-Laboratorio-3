@@ -48,6 +48,7 @@ func NewFulcrumServer(id int) *FulcrumServer {
 }
 
 func (s *FulcrumServer) ProcessVanguardMessage(ctx context.Context, in *pb.Message) (*pb.Acknowledgement, error) {
+    fmt.Println("Vanguard request received:", in.Sector, in.Base)
     // Get the stored vector clock for the sector
     storedClock, ok := s.vClocks[in.Sector]
     if !ok {
@@ -278,6 +279,7 @@ func (s *FulcrumServer) updateSectorFile(sector string) {
 }
 
 func (s *FulcrumServer) ApplyCommand(ctx context.Context, command *pb.CommandRequest) (*pb.CommandResponse, error) {
+    fmt.Println("Command received:", command.Action, command.Sector, command.Base)
     switch command.Action {
     case "AgregarBase":
         s.AgregarBase(command.Sector, command.Base, int(command.Value))
@@ -346,6 +348,7 @@ func (s *FulcrumServer) ApplyPropagation(ctx context.Context, p *pb.Propagation)
 }
 
 func (s *FulcrumServer) PropagateChanges() {
+    fmt.Println("Propagating changes...")
     // Iterate over all other servers
     for _, otherServer := range s.otherServers {
         // Create a Fulcrum client

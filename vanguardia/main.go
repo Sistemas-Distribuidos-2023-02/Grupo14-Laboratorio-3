@@ -53,6 +53,7 @@ func (s *server) GetSoldados(ctx context.Context, in *pb.Command) (*pb.Response,
         FulcrumServer: ack.GetFulcrumServer(),
     }
     logEntries = append(logEntries, logEntry)
+    fmt.Printf("Reply received. Logged %v\n", logEntry)
 
     // Return the response from the Broker server to the user
     return &pb.Response{
