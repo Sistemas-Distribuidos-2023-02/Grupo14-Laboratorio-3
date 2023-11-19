@@ -1,0 +1,15 @@
+FROM golang:1.18
+
+WORKDIR /app
+
+COPY . .
+
+RUN go mod download
+
+WORKDIR /app/broker
+
+RUN go build -o main .
+
+EXPOSE 50051
+
+CMD ["./main"]

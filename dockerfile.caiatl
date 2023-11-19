@@ -1,0 +1,15 @@
+FROM golang:1.18
+
+WORKDIR /app
+
+COPY . .
+
+RUN go mod download
+
+WORKDIR /app/informante/Caiatl
+
+RUN go build -o main .
+
+EXPOSE 50050
+
+CMD ["./main"]

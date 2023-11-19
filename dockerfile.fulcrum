@@ -1,0 +1,21 @@
+FROM golang:1.18
+
+WORKDIR /app
+
+COPY . .
+
+RUN go mod download
+
+ARG NUM
+
+WORKDIR /app/fulcrum
+
+RUN go build -o main .
+
+ENV N=$NUM
+
+EXPOSE 50056
+EXPOSE 50057
+EXPOSE 50058
+
+CMD ./main $N
