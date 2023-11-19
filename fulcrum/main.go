@@ -36,7 +36,7 @@ func NewFulcrumServer(id int) *FulcrumServer {
     // Initialize the otherServers slice
     for i := 0; i < 3; i++ {
         if i != id {
-            conn, err := grpc.Dial(fmt.Sprintf("localhost:%d", 50055+i), grpc.WithInsecure())
+            conn, err := grpc.Dial(fmt.Sprintf("localhost:%d", 50055+i+1), grpc.WithInsecure())
             if err != nil {
                 log.Fatalf("Failed to connect to server %d: %v", i, err)
             }
@@ -111,7 +111,7 @@ func (s *FulcrumServer) AgregarBase(sector string, base string, quantity int) {
     if _, ok := s.vClocks[sector]; !ok {
         s.vClocks[sector] = make([]int, 3)
     }
-    s.vClocks[sector][s.id]++
+    s.vClocks[sector][s.id-1]++
 
     // Write to the log file
     f, err := os.OpenFile("log.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
@@ -311,6 +311,18 @@ func (s *FulcrumServer) ApplyPropagation(ctx context.Context, p *pb.Propagation)
 
     // Get the current state and vector clock for the sector
     currentState, currentVC := s.state[p.Sector], s.vClocks[p.Sector]
+    
+    // If the sector doesn't exist in the state map, initialize it
+    if currentState == nil {
+        currentState = make(map[string]int)
+        s.state[p.Sector] = currentState
+    }
+
+    // If the sector doesn't exist in the vector clocks map, initialize it
+    if currentVC == nil {
+        currentVC = make([]int, 3)
+        s.vClocks[p.Sector] = currentVC
+    }
 
     // Convert the incoming state to map[string]int
     incomingState := make(map[string]int)
@@ -320,6 +332,11 @@ func (s *FulcrumServer) ApplyPropagation(ctx context.Context, p *pb.Propagation)
 
     // Compare the incoming vector clock with the current vector clock
     for i, incomingTime := range p.VectorClock {
+        // Ensure currentVC is long enough
+        for len(currentVC) <= i {
+            currentVC = append(currentVC, 0)
+        }
+
         incomingTimeInt := int(incomingTime)
         if incomingTimeInt > currentVC[i] {
             // The incoming state is more recent, so update the server state and vector clock
@@ -331,6 +348,11 @@ func (s *FulcrumServer) ApplyPropagation(ctx context.Context, p *pb.Propagation)
         } else {
             // The incoming state and server state are concurrent, so resolve the conflict
             for k, v := range incomingState {
+                // If currentState is nil, initialize it
+                if currentState == nil {
+                    currentState = make(map[string]int)
+                }
+
                 if v2, ok := currentState[k]; !ok || v > v2 {
                     // If the key is not in the current state, or the incoming value is greater,
                     // update the current state with the incoming value
@@ -340,9 +362,45 @@ func (s *FulcrumServer) ApplyPropagation(ctx context.Context, p *pb.Propagation)
         }
     }
 
+    // If the sector doesn't exist in the state map, initialize it
+    if s.state[p.Sector] == nil {
+        s.state[p.Sector] = make(map[string]int)
+    }
+
+    // If the sector doesn't exist in the vector clocks map, initialize it
+    if s.vClocks[p.Sector] == nil {
+        s.vClocks[p.Sector] = make([]int, 3)
+    }
+
     // Update the server state and vector clock
     s.state[p.Sector] = currentState
     s.vClocks[p.Sector] = currentVC
+
+    // Open the log file
+    logFile, err := os.OpenFile("log.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+    if err != nil {
+        return nil, fmt.Errorf("failed to open log file: %w", err)
+    }
+    defer logFile.Close()
+
+    // Write to the log file
+    _, err = fmt.Fprintf(logFile, "Applied propagation for sector %s\n", p.Sector)
+    if err != nil {
+        return nil, fmt.Errorf("failed to write to log file: %w", err)
+    }
+
+    // Open the sector file
+    sectorFile, err := os.OpenFile(fmt.Sprintf("Sector%s.txt", p.Sector), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+    if err != nil {
+        return nil, fmt.Errorf("failed to open sector file: %w", err)
+    }
+    defer sectorFile.Close()
+
+    // Write to the sector file
+    _, err = fmt.Fprintf(sectorFile, "State: %v, Vector clock: %v\n", currentState, currentVC)
+    if err != nil {
+        return nil, fmt.Errorf("failed to write to sector file: %w", err)
+    }
 
     return &pb.PropagationResponse{Success: true, Message: "Propagation applied successfully"}, nil
 }
