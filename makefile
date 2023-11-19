@@ -22,11 +22,11 @@ docker-f3: ## Initiates the Docker code for fulcrum 3
 
 docker-i1: ## Initiates the Docker code for Caiatl
 	@docker build -f dockerfile.caiatl -t caiatl .
-	@docker run -p 50050:50050 --name caiatl caiatl
+	@docker run -i -p 50050:50050 --name caiatl caiatl
 
 docker-i2: ## Initiates the Docker code for Osiris
 	@docker build -f dockerfile.osiris -t osiris .
-	@docker run -p 50050:50050 --name osiris osiris
+	@docker run -i -p 50050:50050 --name osiris osiris
 
 help: ## Display this help message
 	@echo "Usage:"
