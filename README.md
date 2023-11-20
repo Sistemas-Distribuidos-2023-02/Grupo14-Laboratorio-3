@@ -16,7 +16,7 @@ Vanguardia = Mismo rol que el server de la ONU en el lab 2
 
 * Make:
 	* `make help`: Muestra los comandos disponibles
-	* `make clean`: Borra TODOS las imagenes y contenedores de Docker (ejecutar con cuidado)
+	* `make clean`: Borra TODAS las imagenes y contenedores de Docker (ejecutar con cuidado)
 
 * Docker:
 Para armar y ejecutar los contenedores de docker, usar `make help` para encontrar el comando que arma el contenedor deseado. Si se debe re-ejecutar el contenedor usar `make clean` y usar el comando anterior de nuevo.
