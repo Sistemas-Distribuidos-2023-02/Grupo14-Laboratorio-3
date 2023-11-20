@@ -40,7 +40,7 @@ func NewFulcrumServer(id int) *FulcrumServer {
     // Initialize the otherServers slice
     for i := 0; i < 3; i++ {
         if i != id {
-            conn, err := grpc.Dial(fmt.Sprintf("dist05%d:%d", 4+i, 50056+i), grpc.WithInsecure())
+            conn, err := grpc.Dial(fmt.Sprintf("localhost:%d", 50056+i), grpc.WithInsecure())
             if err != nil {
                 log.Fatalf("Failed to connect to server %d: %v", i, err)
             }
