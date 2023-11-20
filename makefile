@@ -6,7 +6,7 @@ docker-broker: ## Initiates the Docker code for the broker server
 
 docker-vanguardia: ## Initiates the Docker code for the vanguard server
 	@docker build -f dockerfile.vanguardia -t vanguardia .
-	@docker run -i -p 50050:50050 --name vanguardia vanguardia
+	@docker run -i -p 50052:50052 --name vanguardia vanguardia
 
 docker-f1: ## Initiates the Docker code for fulcrum 1
 	@docker build -f dockerfile.fulcrum --build-arg NUM=1 -t fulcrum1 .
