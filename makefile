@@ -28,6 +28,10 @@ docker-i2: ## Initiates the Docker code for Osiris
 	@docker build -f dockerfile.osiris -t osiris .
 	@docker run -i -p 50050:50050 --name osiris osiris
 
+clean: ## Remove all Docker containers and images
+	@docker rm -f $$(docker ps -a -q) || true
+	@docker rmi -f $$(docker images -q) || true
+
 help: ## Display this help message
 	@echo "Usage:"
 	@echo "  make <target>"
@@ -39,3 +43,4 @@ help: ## Display this help message
 	@echo "  docker-f3	   Initiates the Docker code for fulcrum 3"
 	@echo "  docker-i1	   Initiates the Docker code for Caiatl"
 	@echo "  docker-i2	   Initiates the Docker code for Osiris"
+	@echo "  clean		   Remove all Docker containers and images"

@@ -14,6 +14,13 @@ Vanguardia = Mismo rol que el server de la ONU en el lab 2
 
 * Para compilar protobuf (ejecutar en directorio root del repo): `protoc -I proto/ --go_out=proto/ --go_opt=paths=source_relative --go-grpc_out=proto/ --go-grpc_opt=paths=source_relative proto/*.proto`
 
+* Make:
+	* `make help`: Muestra los comandos disponibles
+	* `make clean`: Borra TODOS las imagenes y contenedores de Docker (ejecutar con cuidado)
+
+* Docker:
+Para armar y ejecutar los contenedores de docker, usar `make help` para encontrar el comando que arma el contenedor deseado. Si se debe re-ejecutar el contenedor usar `make clean` y usar el comando anterior de nuevo.
+
 ## Máquinas Virtuales
 
 Máquina - Contraseña
