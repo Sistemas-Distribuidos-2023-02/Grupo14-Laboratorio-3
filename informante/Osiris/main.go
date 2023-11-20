@@ -73,6 +73,7 @@ func sendToFulcrum(ip string, commandParts []string) string {
 	if err != nil {
 		panic("No se puede conectar al Fulcrum " + err.Error())
 	}
+	defer conn.Close()
 	serviceClient := pb.NewFulcrumClient(conn)
 
     // Initialize a CommandRequest with default values
