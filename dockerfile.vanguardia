@@ -10,6 +10,4 @@ WORKDIR /app/vanguardia
 
 RUN go build -o main .
 
-EXPOSE 50050
-
 CMD ["./main"]
